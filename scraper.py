@@ -1,33 +1,40 @@
 import re
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urldefrag
 from bs4 import BeautifulSoup
 import requests
+from determinecrawl import should_crawl
+
+# ADD STOPWORDS HERE
 
 def scraper(url, resp)->list:
     ''' NEED TO DEVELOP '''
     if 200 <= resp.status < 400:
         # no error status: return valid URLs
-        # HANDLE ROBOTS.TXT HERE
         links = extract_next_links(url, resp)
-        return [link for link in links if is_valid(link)]
+        
+        return links
     else:
         return []
 
 def extract_next_links(url, resp):
     '''Finds linked webpages from a link.'''
-        
     # the following code block is largely credited to the following documentation:
     # https://www.kite.com/python/answers/how-to-get-href-links-from-urllib-urlopen-in-python
-    soup = BeautifulSoup(resp.raw_response.text, 'lxml')
-    pages = set()
-    for link in soup.find_all('a'):
-        # HANDLE ROBOTS.TXT HERE
-        # HANDLE FRAGMENTS HERE
-        href = link.get('href')
-        if is_valid(href):
-            pages.add(href)
+    # check if this page can/should be crawled
 
-    return list(pages)
+    soup = BeautifulSoup(resp.raw_response.text, 'lxml')
+    links = set()
+    for link in soup.find_all('a'):
+        href = link.get('href')
+        href = urldefrag(href)[0]
+
+        crawlable = should_crawl(url, urlparse(href))
+
+        if is_valid(href):
+            if crawlable:
+                links.add(href)
+
+    return list(links)
 
 def is_valid(url):
     '''Return a boolean value to indicate whether or not the url is valid or not.
