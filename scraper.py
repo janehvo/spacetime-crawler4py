@@ -3,15 +3,14 @@ from urllib.parse import urlparse, urldefrag
 from bs4 import BeautifulSoup
 import requests
 from determinecrawl import should_crawl
-
-# ADD STOPWORDS HERE
+from reports import get_reports, analyze_page
 
 def scraper(url, resp)->list:
     ''' NEED TO DEVELOP '''
     if 200 <= resp.status < 400:
         # no error status: return valid URLs
         links = extract_next_links(url, resp)
-        
+        get_reports(links)
         return links
     else:
         return []
@@ -20,19 +19,19 @@ def extract_next_links(url, resp):
     '''Finds linked webpages from a link.'''
     # the following code block is largely credited to the following documentation:
     # https://www.kite.com/python/answers/how-to-get-href-links-from-urllib-urlopen-in-python
-    # check if this page can/should be crawled
 
     soup = BeautifulSoup(resp.raw_response.text, 'lxml')
     links = set()
     for link in soup.find_all('a'):
         href = link.get('href')
         href = urldefrag(href)[0]
-
+        
+        # check if this page can/should be crawled
         crawlable = should_crawl(url, urlparse(href))
 
-        if is_valid(href):
-            if crawlable:
-                links.add(href)
+        if is_valid(href) and crawlable:
+            links.add(href)
+            analyze_page(href)
 
     return list(links)
 
