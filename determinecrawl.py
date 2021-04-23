@@ -3,9 +3,25 @@ import requests
 from urllib import robotparser
 from collections import defaultdict
 import re
+from bs4 import BeautifulSoup
 
 # robots that have been read already
 robots_read = dict()
+
+# TO DO: implement duplicate detection
+
+
+def atags(url, soup)->bool:
+    '''Pages with a large atag to text count is considered a trap. Return True if trap.'''
+    atag_count = 0
+    text_count = 0
+    for a in soup.find_all("a"):
+        atag_count += 1
+    for text in soup.get_text(separator="\n").split('\n'):
+        text_count += 1
+
+    return True if text_count/atag_count < .8 else False
+
 
 def check_robots(url, parsed)->bool:
     '''Check robots.txt. Return True if this agent is allowed to crawl, False otherwise.'''
@@ -24,6 +40,7 @@ def check_robots(url, parsed)->bool:
     except:
         # requests.get('http://' + parsed.netloc + '/robots.txt') throw and exception if no robots.txt is found
         return False
+
 
 # crawler traps were identified with the references to:
 # https://support.archive-it.org/hc/en-us/articles/208332943-Identify-and-avoid-crawler-traps-

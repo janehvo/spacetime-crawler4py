@@ -23,6 +23,10 @@ def extract_next_links(url, resp):
 
     soup = BeautifulSoup(resp.raw_response.text, 'html.parser')
 
+    # check if there are too many atags compared to text (trap)
+    if atags(url, soup):
+        return []
+
     tokenize(url, soup)
     links = set()
     for link in soup.find_all('a'):
