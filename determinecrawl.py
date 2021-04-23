@@ -13,14 +13,18 @@ robots_read = dict()
 
 def atags(url, soup)->bool:
     '''Pages with a large atag to text count is considered a trap. Return True if trap.'''
-    atag_count = 0
-    text_count = 0
-    for a in soup.find_all("a"):
-        atag_count += 1
-    for text in soup.get_text(separator="\n").split('\n'):
-        text_count += 1
+    try:
+        atag_count = len(soup.find_all("a"))
+        text_count = len(soup.get_text(separator="\n").split('\n')):
 
-    return True if text_count/atag_count < .8 else False
+        # if this page has no text, count it as a trap and skip scraping it
+        if text_count == 0:
+            return True
+
+        return True if text_count/atag_count < .8 else False
+    except ZeroDivisionError:
+        # this means that the page has text only
+        return False
 
 
 def check_robots(url, parsed)->bool:
@@ -54,6 +58,9 @@ def check_trap(url, parsed)->bool:
     if re.match(r"^.*calendaar.*$", parsed.path.lower()):
         return False
     if 'date' in parsed.params or 'year' in parsed.params.lower():
+        return False
+    # archives are also a trap
+    if re.match(r"^archive.*", parsed.path.lower()):
         return False
     # check repeating directories:
     if re.match(r"^.*?(/.+?/).*?\1.*$|^.*?/(.+?/)\2.*$", parsed.path):

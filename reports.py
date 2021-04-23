@@ -92,8 +92,6 @@ def analyze_page(url:str):
     # find all tokens in page
     tokenize(url)
 
-    return
-
 
 def get_reports():
     '''Write scrape analystics to a file.'''
@@ -122,6 +120,4 @@ def get_reports():
     file.write(wstring)
     for subdomain in sorted(ics_subdomains.keys()):
         file.write(subdomain + ", " + ics_subdomains[subdomain] + "\n")
-
-    return
     

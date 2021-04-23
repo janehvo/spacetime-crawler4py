@@ -21,7 +21,7 @@ def extract_next_links(url, resp):
     # https://www.kite.com/python/answers/how-to-get-href-links-from-urllib-urlopen-in-python
     relative = urlparse(url)
 
-    soup = BeautifulSoup(resp.raw_response.text, 'html.parser')
+    soup = BeautifulSoup(resp.raw_response.text, 'lxml')
 
     # check if there are too many atags compared to text (trap)
     if atags(url, soup):
