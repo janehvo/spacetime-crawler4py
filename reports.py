@@ -40,8 +40,8 @@ stopwords = ["a", "about", "above", "after", "again", "against", "all", "am", "a
              "yourself", "yourselves"]
 
 unique_urls = set()
-longest_page = ('', 0)
-most_common = dict()
+longest_page = ('', 0)  # determining this by word count
+token_frequencies = defaultdict(int)
 ics_subdomains = defaultdict(int)
 
 def check_icssubdomain(url:str):
@@ -51,17 +51,77 @@ def check_icssubdomain(url:str):
     return
 
 
+ def computeWordFrequencies(tokens: list):
+    '''Counts the number of occurences of each token in a list of tokens.'''
+    global most_common
+    for t in tokens:
+        tokenFrequency[t] += 1
+    return
+   
+
+def tokenize(url, soup):
+    global longest_page
+    # initialize regex sequence for alphanumeric strings
+    sequence = re.compile(r'^[a-zA-z0-9]*$')
+    # initialize empty set to store unique tokens
+    tokens = []
+
+    for text in soup.get_text():
+        # concantenate apostrophes, then strip puncuation from the text
+        text = text.replace('\'', '')
+        text = re.sub(r'[^\w\s]', ' ', text)
+        # get individual words in the line
+        for word in text.split():
+            if re.match(sequence, word) and word not in stopwords and len(word) > 2:
+                # any string with the same characters, no matter the case, are the considered the same
+                tokens.append(word.lower())
+
+    computeWordFrequencies(tokens)
+    # check if this is the longest page
+    page_length = len(tokens)
+    if page_length > longest_page[1]:
+        longest_page = (url, page_length)
+
+
 def analyze_page(url:str):
+    global unique_urls
     # unique pages
     unique_urls.add(url)
     # check if the it as a subdomain of .ics.uci.edu
     check_icssubdomain(url)
-    # check page length
-
+    # find all tokens in page
+    tokenize(url)
 
     return
 
 
-def get_reports(links:list):
+def get_reports():
+    '''Write scrape analystics to a file.'''
+    file = open("reports.py", "w")
+
+    # unique pages
+    wstring = "[1] Number of unique pages found: " + str(len(unique_urls)) + ".\n"
+    file.write(wstring)
+
+    # longest page
+    wstring = "\n[2] Longest page in terms of number of words: " + longest_page[0] + ", whose length is " + str(longest_page[1] + "\n")
+    file.write(wstring)
+
+    # 50 most common words. in descending order
+    wstring = "\n[3] The 50 most common words:\n"
+    count = 1
+    file.write(wstring)
+    for token in sorted(token_frequencies, key = lambda x: -token_frequencies[x]):
+        file.write(str(count) + ". " + token + "-->" + token_frequencies[token] + "\n")
+        count += 1
+        if count == 51:
+            break
+
+    # number of ics.uci.edu subdomains, in alphabetical order
+    wstring = "\n[4]Subdomains of ics.uci.edu that were found:\n"
+    file.write(wstring)
+    for subdomain in sorted(ics_subdomains.keys()):
+        file.write(subdomain + ", " + ics_subdomains[subdomain] + "\n")
+
     return
     

@@ -1,16 +1,16 @@
 import re
-from urllib.parse import urlparse, urldefrag
+from urllib.parse import urlparse, urldefrag, urljoin
 from bs4 import BeautifulSoup
 import requests
 from determinecrawl import should_crawl
-from reports import get_reports, analyze_page
+from reports import get_reports, analyze_page, tokenize
 
 def scraper(url, resp)->list:
     ''' NEED TO DEVELOP '''
     if 200 <= resp.status < 400:
         # no error status: return valid URLs
         links = extract_next_links(url, resp)
-        get_reports(links)
+        get_reports()
         return links
     else:
         return []
@@ -19,17 +19,30 @@ def extract_next_links(url, resp):
     '''Finds linked webpages from a link.'''
     # the following code block is largely credited to the following documentation:
     # https://www.kite.com/python/answers/how-to-get-href-links-from-urllib-urlopen-in-python
+    relative = urlparse(url)
 
-    soup = BeautifulSoup(resp.raw_response.text, 'lxml')
+    soup = BeautifulSoup(resp.raw_response.text, 'html.parser')
+
+    tokenize(url, soup)
     links = set()
     for link in soup.find_all('a'):
         href = link.get('href')
         href = urldefrag(href)[0]
-        
-        # check if this page can/should be crawled
-        crawlable = should_crawl(url, urlparse(href))
 
-        if is_valid(href) and crawlable:
+        # check if it is a relative path and if so, fill in the missing parts
+        parsed = urlparse(href)
+        if parsed.scheme == '' and parsed.netloc == '':
+            parsed._replace(scheme=relative.scheme)
+            parsed._replace(netloc=relative.netloc)
+        else if parsed.scheme != '' and parsed.netloc == '':
+            parsed._replace(netloc=relative.netloc)
+        else if parsed.scheme == '' and parsed.netloc != '':
+            parsed._replace(scheme=relative.scheme)
+
+        href = parsed.geturl()
+        
+        # check if this page can/should be crawled if it is a valid url
+        if is_valid(href) and should_crawl(href, parsed):
             links.add(href)
             analyze_page(href)
 
