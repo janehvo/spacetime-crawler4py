@@ -15,7 +15,7 @@ def atags(url, soup)->bool:
     '''Pages with a large atag to text count is considered a trap. Return True if trap.'''
     try:
         atag_count = len(soup.find_all("a"))
-        text_count = len(soup.get_text(separator="\n").split('\n')):
+        text_count = len(soup.get_text(separator="\n").split('\n'))
 
         # if this page has no text, count it as a trap and skip scraping it
         if text_count == 0:

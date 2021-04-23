@@ -16,8 +16,7 @@
 #    http://vision.ics.uci.edu, 10 (not the actual number here)
 
 import requests
-from urllib import urlparse
-from nltk.corpus import stopwords
+from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 import re
 from collections import defaultdict
@@ -51,7 +50,7 @@ def check_icssubdomain(url:str):
     return
 
 
- def computeWordFrequencies(tokens: list):
+def computeWordFrequencies(tokens: list):
     '''Counts the number of occurences of each token in a list of tokens.'''
     global most_common
     for t in tokens:
