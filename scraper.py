@@ -25,10 +25,9 @@ def extract_next_links(url, resp):
     # check if there are too many atags compared to text (trap), or if there is no text
     if atags(url, soup):
         return []
-    
-    relative = urlparse(url)
 
     tokenize(url, soup)
+
     links = set()
     for link in soup.find_all('a'):
         href = link.get('href')
@@ -39,12 +38,9 @@ def extract_next_links(url, resp):
         parsed = urlparse(href)
         if parsed.scheme == '' and parsed.netloc == '':
             href = urljoin(url, href)
-
-        #print(href)
         
         # check if this page can/should be crawled if it is a valid url
         if is_valid(href) and should_crawl(href, parsed):
-            # print('\nhecc yes\n')
             links.add(href)
             analyze_page(href)
 

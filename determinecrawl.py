@@ -1,4 +1,4 @@
-# ======= Handle robots.txt ========
+# ======= Handle robots.txt and crawler traps ========
 import requests
 from urllib import robotparser
 from collections import defaultdict
@@ -15,7 +15,7 @@ def atags(url, soup)->bool:
     '''Pages with a large atag to text count is considered a trap. Return True if trap.'''
     try:
         atag_count = len(soup.find_all('a'))
-        text_count = len(soup.get_text(separator='').split())
+        text_count = len(soup.get_text().split())
 
         # if this page has no textual content, count it as a trap and skip scraping it
         if text_count == 0:

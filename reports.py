@@ -1,20 +1,5 @@
 # ======= Handle assignment output requirements here =======
 
-# 1. How many unique pages did you find? Uniqueness for the purposes of this assignment is ONLY established by the URL, 
-#    but discarding the fragment part. So, for example, http://www.ics.uci.edu#aaa and http://www.ics.uci.edu#bbb are the same URL. 
-#    Even if you implement additional methods for textual similarity detection, please keep considering the above definition of unique pages 
-#    for the purposes of counting the unique pages in this assignment.
-
-# 2. What is the longest page in terms of the number of words? (HTML markup doesn’t count as words)
-
-# 3. What are the 50 most common words in the entire set of pages crawled under these domains? 
-#    (Ignore English stop words, which can be found, for example, here (Links to an external site.)) 
-#    Submit the list of common words ordered by frequency.
-
-# 4. How many subdomains did you find in the ics.uci.edu domain? Submit the list of subdomains ordered alphabetically and 
-#    the number of unique pages detected in each subdomain. The content of this list should be lines containing URL, number, for example:
-#    http://vision.ics.uci.edu, 10 (not the actual number here)
-
 import requests
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
@@ -39,36 +24,32 @@ stopwords = ["a", "about", "above", "after", "again", "against", "all", "am", "a
              "yourself", "yourselves"]
 
 unique_urls = set()
-longest_page = ('', 0)  # determining this by word count
+longest_page = ('', 0)
 token_frequencies = defaultdict(int)
 ics_subdomains = defaultdict(int)
 
-def check_icssubdomain(url:str):
-    parsed = urlparse(url)
-    if re.match(r".*\.ics\.uci\.edu$", parsed.netloc):
-        ics_subdomains[parsed.scheme + '://' + parsed.netloc] += 1
-    return
 
-
-def computeWordFrequencies(tokens: list):
+def token_frequencies(tokens: list):
     '''Counts the number of occurences of each token in a list of tokens.'''
     global token_frequencies
     for t in tokens:
         token_frequencies[t] += 1
-    return
    
 
 def tokenize(url, soup):
+    '''Find all tokens in a page and get word count.'''
     global longest_page
-    # initialize regex sequence for alphabetic strings
+    global stopwords
+
+    # initialize regex sequence for alphabetic strings (excluding numeric strings)
     sequence = re.compile(r'^[a-zA-Z]*$')
-    # initialize empty set to store unique tokens
+
     tokens = []
-    words = 0
+    word_count = 0
     
     for text in soup.get_text().split():
         # up the word count
-        words += 1
+        word_count += 1
         # concantenate apostrophes, then strip puncuation from the text
         text = text.replace('\'', '')
         text = re.sub(r'[^\w\s]', ' ', text)
@@ -76,10 +57,17 @@ def tokenize(url, soup):
             # any string with the same characters, no matter the case, are the considered the same
             tokens.append(text.lower())
 
-    computeWordFrequencies(tokens)
+    token_frequencies(tokens)
     # check if this is the longest page
-    if words > longest_page[1]:
+    if word_count > longest_page[1]:
         longest_page = (url, words)
+
+
+def check_icssubdomain(url:str):
+    '''Check if url is a subdomain of ics.uci.edu.'''
+    parsed = urlparse(url)
+    if re.match(r".*\.ics\.uci\.edu$", parsed.netloc):
+        ics_subdomains[parsed.scheme + '://' + parsed.netloc] += 1
 
 
 def analyze_page(url:str):
@@ -105,12 +93,12 @@ def get_reports():
     wstring = "\n[2] Longest page in terms of number of words: " + longest_page[0] + ", whose length is " + str(longest_page[1]) + "\n"
     file.write(wstring)
 
-    # 50 most common words. in descending order
+    # 50 most common words, in descending order
     wstring = "\n[3] The 50 most common words:\n"
     count = 1
     file.write(wstring)
     for token in sorted(token_frequencies, key = lambda x: -token_frequencies[x]):
-        file.write(str(count) + ". " + token + "-->" + str(token_frequencies[token]) + "\n")
+        file.write(str(count) + ". " + token + " --> " + str(token_frequencies[token]) + "\n")
         count += 1
         if count == 51:
             break
@@ -120,4 +108,3 @@ def get_reports():
     file.write(wstring)
     for subdomain in sorted(ics_subdomains.keys()):
         file.write(subdomain + ", " + str(ics_subdomains[subdomain]) + "\n")
-    
