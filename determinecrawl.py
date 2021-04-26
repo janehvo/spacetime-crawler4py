@@ -38,13 +38,14 @@ def check_robots(parsed)->bool:
     try:
         url = 'http://' + parsed.netloc + '/robots.txt'
         sitemap = requests.get(url)
+        # if there is no robots.txt, it is crawlable 
         if sitemap.status_code != 200:
-            return False
+            return True
         rp = robotparser.RobotFileParser(url)
         rp.read()
         if rp.can_fetch('*', url):
             robots_read[parsed.netloc] = True
-        return True
+        return robots_read[parsed.netloc]
             
     except:
         # requests.get('http://' + parsed.netloc + '/robots.txt') throw and exception if no robots.txt is found
