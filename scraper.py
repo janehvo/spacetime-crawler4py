@@ -61,9 +61,6 @@ def is_valid(url):
         if re.match(r".*\.today\.uci\.edu$", parsed.netloc) and not re.match(r".*\/department\/information_computer_sciences$", parsed.path):
             return False
         
-        if re.match(r".*(pdf|img).*", parsed.path.lower()):
-            return False
-        
         if re.match(r"^replytocom=.*", parsed.query.lower()):
             return False
 

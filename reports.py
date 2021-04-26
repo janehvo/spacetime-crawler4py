@@ -29,7 +29,7 @@ token_frequencies = defaultdict(int)
 ics_subdomains = defaultdict(int)
 
 
-def token_frequencies(tokens: list):
+def count_token_frequencies(tokens: list):
     '''Counts the number of occurences of each token in a list of tokens.'''
     global token_frequencies
     for t in tokens:
@@ -57,10 +57,10 @@ def tokenize(url, soup):
             # any string with the same characters, no matter the case, are the considered the same
             tokens.append(text.lower())
 
-    token_frequencies(tokens)
+    count_token_frequencies(tokens)
     # check if this is the longest page
     if word_count > longest_page[1]:
-        longest_page = (url, words)
+        longest_page = (url, word_count)
 
 
 def check_icssubdomain(url:str):
